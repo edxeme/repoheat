@@ -1,6 +1,7 @@
 """Parser tests against captured git log samples (inline fixtures)."""
 
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -79,19 +80,8 @@ def test_collect_history_wraps_missing_git_binary(tmp_path):
         collect_history(tmp_path, runner=fake_run)
 
 
-def test_since_flag_is_passed_to_git(tmp_path):
-    captured = {}
+def test_argv_has_no_date_filtering_flags():
+    from repoheat.gitlog import numstat_argv
 
-    def fake_run(argv, **kwargs):
-        captured["argv"] = argv
-
-        class Proc:
-            returncode = 0
-            stdout = ""
-            stderr = ""
-
-        return Proc()
-
-    collect_history(tmp_path, since="2026-09-01", runner=fake_run)
-
-    assert "--since=2026-09-01" in captured["argv"]
+    # date filtering happens in Python, not via git approxidate
+    assert not any(arg.startswith("--since") for arg in numstat_argv(Path(".")))

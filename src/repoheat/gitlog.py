@@ -49,9 +49,9 @@ class GitHistoryError(RuntimeError):
     """Raised when git history cannot be collected or parsed."""
 
 
-def numstat_argv(path: Path, *, since: str | None = None) -> list[str]:
+def numstat_argv(path: Path) -> list[str]:
     """The exact git invocation used to collect history."""
-    argv = [
+    return [
         "git",
         "-C",
         str(path),
@@ -63,20 +63,22 @@ def numstat_argv(path: Path, *, since: str | None = None) -> list[str]:
         LOG_FORMAT,
         "--numstat",
     ]
-    if since:
-        argv.append(f"--since={since}")
-    return argv
 
 
 def collect_history(
     path: Path,
     *,
-    since: str | None = None,
     runner: Callable[..., subprocess.CompletedProcess] = subprocess.run,
 ) -> list[Commit]:
-    """Collect and parse the change history of the repository at *path*."""
+    """Collect and parse the change history of the repository at *path*.
+
+    Date filtering is deliberately NOT delegated to git: ``--since`` with a
+    bare date is approxidate — its cutoff depends on the host timezone and
+    it excludes same-day commits. Callers filter parsed commits in Python
+    instead, where semantics are explicit.
+    """
     try:
-        proc = runner(numstat_argv(path, since=since), capture_output=True, text=True)
+        proc = runner(numstat_argv(path), capture_output=True, text=True)
     except OSError as exc:
         raise GitHistoryError(f"git is not available: {exc}") from exc
 
