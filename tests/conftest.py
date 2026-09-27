@@ -62,9 +62,12 @@ def make_repo(tmp_path: Path):
 
         (repo / "docs").mkdir()
         (repo / "docs" / "readme.md").write_text("# repo\n")
+        (repo / "src" / "core.py").write_text(
+            "a = 1\nb = 2\nc = 3\nd = 4\n# reviewed\n"
+        )
         _git(repo, "add", "-A")
         _git(
-            repo, "commit", "-q", "-m", "add docs",
+            repo, "commit", "-q", "-m", "add docs, review core",
             date="2026-09-03T11:30:00-05:00", author="Ada Lovelace",
         )
         return repo

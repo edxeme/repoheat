@@ -11,11 +11,11 @@ def test_aggregates_across_commits(make_repo):
     churn = aggregate(commits)
 
     core = next(c for c in churn if c.path == "src/core.py")
-    assert core.commits == 2
-    assert core.added == 4  # 3 + 1
+    assert core.commits == 3
+    assert core.added == 5  # 3 + 1 + 1
     assert core.deleted == 0
-    assert core.total == 4
-    assert core.last_touched.isoformat().startswith("2026-09-02")
+    assert core.total == 5
+    assert core.last_touched.isoformat().startswith("2026-09-03")
 
 
 def test_sorted_by_total_churn_descending(make_repo):
@@ -35,7 +35,8 @@ def test_since_is_inclusive_of_the_same_day(make_repo):
 
     churn = aggregate(commits, since="2026-09-03")
 
-    assert [c.path for c in churn] == ["docs/readme.md"]  # committed that day
+    # both files in the same-day commit, readme first on the tie-break
+    assert [c.path for c in churn] == ["docs/readme.md", "src/core.py"]
 
 
 def test_since_excludes_older_commits(make_repo):

@@ -23,7 +23,8 @@ def test_commit_files_match_real_diffs(make_repo):
 
     newest = commits[0]
     assert [(f.path, f.added, f.deleted) for f in newest.files] == [
-        ("docs/readme.md", 1, 0)
+        ("docs/readme.md", 1, 0),
+        ("src/core.py", 1, 0),
     ]
 
     middle = commits[1]
