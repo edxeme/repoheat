@@ -32,6 +32,37 @@ def _git(repo: Path, *args: str, date: str | None = None, author: str | None = N
 
 
 @pytest.fixture
+def make_repo_with_renames(tmp_path: Path):
+    """A repository with a binary file and a directory move (rename)."""
+    def build() -> Path:
+        repo = tmp_path / "renames"
+        repo.mkdir()
+        _git(repo, "init", "-q", "-b", "main")
+        _git(repo, "config", "user.name", "Fallback User")
+        _git(repo, "config", "user.email", "fallback@example.com")
+
+        (repo / "notes.md").write_text("# notes\n")
+        (repo / "logo.bin").write_bytes(b"\x00\x01\x02\x03")
+        _git(repo, "add", "-A")
+        _git(
+            repo, "commit", "-q", "-m", "initial",
+            date="2026-09-05T09:00:00-05:00", author="Ada Lovelace",
+        )
+
+        (repo / "docs").mkdir()
+        _git(repo, "mv", "notes.md", "docs/notes.md")
+        (repo / "docs" / "notes.md").write_text("# notes\n\nmore\n")
+        _git(repo, "add", "-A")
+        _git(
+            repo, "commit", "-q", "-m", "move notes into docs",
+            date="2026-09-06T10:00:00-05:00", author="Linus Torvalds",
+        )
+        return repo
+
+    return build
+
+
+@pytest.fixture
 def make_repo(tmp_path: Path):
     """Build a small, deterministic repository and return its path.
 

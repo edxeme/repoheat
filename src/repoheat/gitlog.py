@@ -49,6 +49,24 @@ class GitHistoryError(RuntimeError):
     """Raised when git history cannot be collected or parsed."""
 
 
+def resolve_rename(raw: str) -> str:
+    """The *new* path for numstat rename entries.
+
+    With ``-M``, git reports renames as ``{old => new}``, ``old => new`` or
+    ``prefix/{old => new}/suffix``. The change belongs to the file's new
+    name — that is where the code lives today.
+    """
+    if "=>" not in raw:
+        return raw
+    if "{" in raw and raw.endswith("}"):
+        head, rest = raw.split("{", 1)
+        inner, _, tail = rest.rpartition("}")
+        _, _, new = inner.partition("=>")
+        return head + new.strip() + tail
+    _, _, new = raw.partition("=>")
+    return new.strip()
+
+
 def numstat_argv(path: Path) -> list[str]:
     """The exact git invocation used to collect history."""
     return [
@@ -105,9 +123,15 @@ def parse_log_output(text: str) -> list[Commit]:
         for line in lines[1:]:
             if not line.strip():
                 continue
-            added_raw, deleted_raw, path = line.split("\t", 2)
+            added_raw, deleted_raw, path_raw = line.split("\t", 2)
+            binary = added_raw == "-" or deleted_raw == "-"
             commit.files.append(
-                FileChange(path=path, added=int(added_raw), deleted=int(deleted_raw))
+                FileChange(
+                    path=resolve_rename(path_raw),
+                    added=0 if binary else int(added_raw),
+                    deleted=0 if binary else int(deleted_raw),
+                    binary=binary,
+                )
             )
         commits.append(commit)
     return commits

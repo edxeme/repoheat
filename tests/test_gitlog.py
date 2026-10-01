@@ -80,6 +80,31 @@ def test_collect_history_wraps_missing_git_binary(tmp_path):
         collect_history(tmp_path, runner=fake_run)
 
 
+def test_rename_paths_resolve_to_the_new_name():
+    output = (
+        "\x1esha\x1f2026-09-20T10:00:00-05:00\x1fAda\n"
+        "0\t0\t{notes.md => docs/notes.md}\n"
+        "2\t1\tsrc/{util.py => helpers.py}\n"
+        "3\t0\tmain => main.py\n"
+    )
+    commits = parse_log_output(output)
+
+    paths = [f.path for f in commits[0].files]
+    assert paths == ["docs/notes.md", "src/helpers.py", "main.py"]
+
+
+def test_binary_files_are_flagged_not_crashing():
+    output = (
+        "\x1esha\x1f2026-09-20T10:00:00-05:00\x1fAda\n"
+        "-\t-\tassets/logo.png\n"
+    )
+    commits = parse_log_output(output)
+
+    change = commits[0].files[0]
+    assert change.binary is True
+    assert change.added == 0 and change.deleted == 0
+
+
 def test_argv_has_no_date_filtering_flags():
     from repoheat.gitlog import numstat_argv
 
