@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "repoheat"
-version = "0.1.0"
+version = "0.2.0"
 description = "Forensics for git repositories: churn, change hotspots and bus factor, straight from git log."
 readme = "README.md"
 requires-python = ">=3.11"
